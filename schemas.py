@@ -1,48 +1,53 @@
 """
-Database Schemas
+Database Schemas for Tailor Platform
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model corresponds to a MongoDB collection. The collection name is the lowercase of the class name.
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 
-from pydantic import BaseModel, Field
-from typing import Optional
+class Tailor(BaseModel):
+    name: str = Field(..., description="Tailor or shop name")
+    bio: Optional[str] = Field(None, description="Short biography/intro")
+    avatar_url: Optional[str] = Field(None, description="Profile image URL")
+    location: Optional[str] = Field(None, description="City / area")
+    rating: Optional[float] = Field(4.8, ge=0, le=5)
+    services: List[str] = Field(default_factory=list, description="Service tags offered")
 
-# Example schemas (replace with your own):
+class Service(BaseModel):
+    title: str
+    description: Optional[str] = None
+    price_from: Optional[float] = Field(None, ge=0)
+    duration_days: Optional[int] = Field(None, ge=0)
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class PortfolioItem(BaseModel):
+    tailor_name: Optional[str] = None
+    title: str
+    image_url: str
+    description: Optional[str] = None
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Review(BaseModel):
+    tailor_name: Optional[str] = None
+    customer_name: str
+    rating: float = Field(..., ge=0, le=5)
+    comment: str
 
-# Add your own schemas here:
-# --------------------------------------------------
+class BlogPost(BaseModel):
+    title: str
+    excerpt: Optional[str] = None
+    cover_url: Optional[str] = None
+    content: Optional[str] = None
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Booking(BaseModel):
+    customer_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    service: str
+    tailor_name: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = Field("requested", description="requested|confirmed|in-progress|ready|delivered")
+
+class DeliveryUpdate(BaseModel):
+    booking_id: str
+    status: str
+    message: Optional[str] = None
